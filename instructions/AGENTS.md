@@ -51,6 +51,48 @@ All projects are written in plain English (US variation) but must be prepared fo
 - GitHub
 - GitHub Actions
 
+# REST API Guidelines
+
+## URLs
+
+- Version all API URLs. Use an integer prefix as the first path segment (e.g., `/v1/`, `/v2/`). Never publish an unversioned API.
+- URLs represent resources (collections) or documents (individual items) — they are nouns, not verbs.
+- Never put action verbs in URL paths (e.g., no `/create_card`, `/delete_user`). HTTP methods are the verbs.
+- Do not nest resource URLs. Each resource must have its own flat, addressable URL.
+  - Bad: `/v1/printers/:printer_id/cartridges/:cartridge_id`
+  - Good: `/v1/cartridges/:cartridge_id`
+- Use query parameters for filtering, not URL path segments.
+  - Bad: `/v1/printers/:printer_id/cartridges/`
+  - Good: `/v1/cartridges/?printer_id=:printer_id`
+- Negotiate content type (JSON, XML, etc.) via `Accept` and `Content-Type` headers, not URL extensions (no `.json`, `.xml` suffixes).
+
+## HTTP Methods
+
+- `GET`: Retrieve a document or list documents from a resource. Safe and idempotent.
+- `POST`: Create a new document. The URL must identify a resource (collection), not a document.
+  - Right: `POST /v1/pipes/`
+  - Wrong: `POST /v1/pipes/1`
+- `PUT`: Replace an existing document entirely. The URL must identify a document, not a resource. Requires sending the complete document.
+  - Right: `PUT /v1/pipes/1`
+  - Wrong: `PUT /v1/pipes/`
+- `PATCH`: Partially update a document. Can modify any number of fields (N ≥ 1) in a single request. The body describes *how* to alter the document, not which single field to change.
+- `DELETE`: Remove a document.
+
+## Status Codes
+
+- Use the semantically correct HTTP status code for every response.
+- `GET` on a resource with zero documents → `200 OK` with an empty list. Never return `404` for an empty collection.
+- `404 Not Found` → only when the endpoint itself does not exist.
+- `4xx` signals a client error: the client must correct the request before retrying.
+- `5xx` signals a server error: the client may retry the same request later.
+- Do not return `4xx` or `5xx` for business rule conflicts (e.g., a duplicate that the system intentionally rejects). Return `200 OK` with a `Content-Location` header pointing to the already-existing resource.
+- Be consistent: a given situation must always produce the same status code across all endpoints.
+
+## Pagination
+
+- Paginate all list endpoints.
+- Use `limit` and `offset` query parameters. Do not use page-number-based pagination.
+
 # Python Development Instructions
 
 ## Python Coding Style
