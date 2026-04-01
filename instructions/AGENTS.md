@@ -91,7 +91,9 @@ All projects are written in plain English (US variation) but must be prepared fo
 ## Pagination
 
 - Paginate all list endpoints.
-- Use `limit` and `offset` query parameters. Do not use page-number-based pagination.
+- Do not use page-number-based pagination (e.g., `?page=2`). Page numbers are unstable under concurrent writes: items can shift between pages while a client is iterating, causing duplicates or skipped records.
+- Prefer cursor-based pagination: the server returns an opaque `cursor` (or `next`/`previous` token) that the client passes on the next request. This is stable under concurrent writes and scales better with large datasets.
+- Use `limit` and `offset` only when cursor-based pagination is impractical (e.g., the client needs random access to arbitrary positions).
 
 # Python Development Instructions
 
