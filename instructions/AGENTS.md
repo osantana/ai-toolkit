@@ -16,9 +16,40 @@ All projects are written in plain English (US variation) but must be prepared fo
 
 - Small commits with messages starting with an imperative verb (Fix, Add, Change, Rename, Refactor, Update, etc.).
 
-## Instructions
+## Coding Style
+
+- Use early returns to keep the main flow of a function at the first indentation level.
+- Prefer exceptions over null/flag returns. Use null only in exceptional scenarios or to maintain consistency with libraries and frameworks.
+- Only handle exceptions you know how to handle. Never catch base or root exception types.
+- Do not use inline documentation (e.g., docstrings, JSDoc) unless the framework requires it to document public APIs.
+- Prefer clarity over brevity: use inline expressions and comprehensions only for simple cases.
+- Modules must never raise exceptions on import.
+- Do not shadow built-in or language-reserved names. Find a more descriptive name instead.
+- Do not violate the Law of Demeter.
+- Always use the latest stable version of all packages and dependencies.
+
+## Configuration
 
 - Follow the 12-factor app methodology for everything.
+- Read all configuration and secrets from environment variables, falling back to a `.env` file at the project root.
+
+## Testing
+
+- Write tests using the standard testing framework for the language/project.
+- Tests must be written as functions, not classes (where the framework allows).
+- Place shared fixtures and helpers in a central configuration file (e.g., `tests/conftest.py`).
+- Use pre-commit hooks for basic code quality checks.
+
+## Documentation
+
+- Do not produce code documentation unless the project is FLOSS.
+- All projects must have a minimal `README.md` at the root explaining how to set up the local environment, submit pull requests, and deploy the project.
+- For FLOSS projects, create a `docs/` directory using the standard documentation tool for the language.
+
+## CI/CD
+
+- GitHub
+- GitHub Actions
 
 # Python Development Instructions
 
@@ -28,20 +59,14 @@ See the `ruff` configuration in the `pyproject.toml` sample below for enforced s
 
 - PEP 8 with 120-character lines (enforced by ruff).
 - Use type annotations only where required by the project or framework. Do not annotate everything.
-- Use early returns to keep the main flow of a function at the first indentation level.
-- Prefer exceptions over flag returns (e.g., `None`). Use `None` only in exceptional scenarios or to maintain consistency with libraries and frameworks.
-- Only handle exceptions you know how to handle. Never catch base exceptions like `Exception`.
-- Do not use docstrings unless the framework requires them to document public APIs.
 - Avoid `elif` and `else` wherever possible.
-- Prefer clarity over brevity: use `if` expressions and comprehensions only for simple expressions.
+- Use `None` as a flag return only in exceptional scenarios or to maintain consistency with libraries and frameworks.
+- Never catch `Exception` or `BaseException` — only catch specific exception types you know how to handle.
+- Do not use docstrings unless the framework requires them to document public APIs.
 - Avoid `lambda` except for short expressions used as a `key` argument.
 - Do not use `dict()` to construct dictionaries. Prefer classes or dataclasses.
 - Properties and `__init__()` must never raise exceptions.
-- Modules must never raise exceptions on import.
 - Do not use name mangling (`__double_underscore`).
-- Do not shadow built-in names (e.g., use `id_` instead of `id` — but avoid this pattern; find a more descriptive name).
-- Do not violate the Law of Demeter.
-- Always use the latest stable version of all packages and dependencies.
 - Never modify `sys.path`.
 - Never use `mock.patch` in tests.
 
@@ -83,18 +108,12 @@ See [Python Configuration Files](#python-configuration-files) at the end of this
 - `pytest-asyncio`
 - `pytest-django`
 
-## CI/CD
-
-- GitHub
-- GitHub Actions
-
 ## Configuration Rules
 
-- The settings file must read all configuration and secrets from environment variables, falling back to a `.env` file at the project root. This is handled automatically by `prettyconf`.
-- All static files must be served by Django through `whitenoise`.
+- Read configuration and secrets from environment variables using `prettyconf`, falling back to a `.env` file at the project root.
+- Serve all static files through `whitenoise`.
 - Use pytest for testing, with shared fixtures in `tests/conftest.py`.
-  - All tests must use pytest style: functions, not classes.
-- Use basic hooks in pre-commit.
+- For FLOSS projects, use `sphinx` for documentation (add a documentation dependency group in `pyproject.toml`).
 
 ### Commands
 
@@ -104,12 +123,6 @@ Core development commands are implemented as Makefile targets:
 - `make lint`: Run code linting with ruff
 - `make format`: Format the code with ruff
 - `make typecheck`: Run type checking with mypy
-
-### Documentation
-
-Do not produce code documentation unless the project is FLOSS. All projects must have a minimal `README.md` at the root explaining how to set up the local environment, submit pull requests, and deploy the project (i.e., how to use `make <target>` and GitHub Actions).
-
-For FLOSS projects, create a `docs/` directory using `sphinx` (with documentation dependencies in a group in `pyproject.toml`).
 
 ### Deployment
 
