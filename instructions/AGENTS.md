@@ -1,12 +1,28 @@
 # Global Preferences
 
-`[project-name]` is a SaaS application for content creators (mostly video creators) that generates referral links and link-in-bio landing pages.
+This file includes a set of guidelines for all projects that we will develop.
 
 # Language
 
 All projects are written in plain English (US variation) but must be prepared for i18n using gettext or the standard mechanism provided by the framework in use.
 
-# Python Coding Style
+# General Development Instructions
+
+## Version Control
+
+- We use `git` for all our projects.
+
+### Commit Messages
+
+- Small commits with messages starting with an imperative verb (Fix, Add, Change, Rename, Refactor, Update, etc.).
+
+## Instructions
+
+- Follow the 12-factor app methodology for everything.
+
+# Python Development Instructions
+
+## Python Coding Style
 
 See the `ruff` configuration in the `pyproject.toml` sample below for enforced style settings.
 
@@ -29,26 +45,16 @@ See the `ruff` configuration in the `pyproject.toml` sample below for enforced s
 - Never modify `sys.path`.
 - Never use `mock.patch` in tests.
 
-# General Coding Instructions
-
-- Let the user commit code. If a commit is necessary, make small commits with messages starting with an imperative verb (Fix, Add, Change, Rename, Refactor, Update, etc.).
-
-# Default Stack
-
-Unless specified otherwise, the standard stack for projects is:
-
 ## Web Applications
 
 See [Python Configuration Files](#python-configuration-files) at the end of this document for sample files.
 
-### Dependencies
-
-#### Backend
+### Backend
 
 - Django
 - PostgreSQL
 
-##### Common Libraries
+#### Common Libraries
 
 - `uvicorn`: WSGI/ASGI application server
 - `whitenoise`: serve static files
@@ -58,13 +64,13 @@ See [Python Configuration Files](#python-configuration-files) at the end of this
 - `django-storages`: static and media file storage
 - `django-allauth[socialaccount]`: signup/signin
 
-#### Frontend
+### Frontend
 
 - HTMX
 - Tabler.io
 - Django Template Language
 
-#### Development Tools
+### Development Tools
 
 - `make`
 - `uv`
@@ -77,16 +83,15 @@ See [Python Configuration Files](#python-configuration-files) at the end of this
 - `pytest-asyncio`
 - `pytest-django`
 
-### CI/CD
+## CI/CD
 
 - GitHub
 - GitHub Actions
 
-### Configuration Rules
+## Configuration Rules
 
 - The settings file must read all configuration and secrets from environment variables, falling back to a `.env` file at the project root. This is handled automatically by `prettyconf`.
 - All static files must be served by Django through `whitenoise`.
-- Follow the 12-factor app methodology for everything else.
 - Use pytest for testing, with shared fixtures in `tests/conftest.py`.
   - All tests must use pytest style: functions, not classes.
 - Use basic hooks in pre-commit.
