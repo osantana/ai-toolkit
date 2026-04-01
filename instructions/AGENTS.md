@@ -33,12 +33,29 @@ All projects are written in plain English (US variation) but must be prepared fo
 - Follow the 12-factor app methodology for everything.
 - Read all configuration and secrets from environment variables, falling back to a `.env` file at the project root.
 
+## Code Review
+
+- No code goes to production without passing code review.
+- Keep pull requests small: deliver value while keeping changes reviewable. Split large changes into multiple PRs.
+- Provide all relevant context in the PR description. Reviewers should not need to chase the linked issue for basic information.
+- Deliver the best code possible on the first submission to avoid multiple review cycles.
+
 ## Testing
 
 - Write tests using the standard testing framework for the language/project.
 - Tests must be written as functions, not classes (where the framework allows).
 - Place shared fixtures and helpers in a central configuration file (e.g., `tests/conftest.py`).
 - Use pre-commit hooks for basic code quality checks.
+- Use test coverage as a tool to find untested use cases, not as a success metric.
+
+## Logging
+
+- Use the language/framework logging system. Never use `print()` or `echo()` for log output.
+- Emit structured, single-line JSON log records.
+- Always include at minimum: log level, UTC timestamp, and a unique transaction ID.
+- Never log sensitive or private data (passwords, secret keys, financial data, personal information, infrastructure details).
+- Use `INFO` level as the minimum in production. Use `DEBUG` in staging and local development.
+- Report unhandled exceptions to an error tracking system (e.g., Sentry). Do not mix them into transactional logs.
 
 ## Documentation
 
@@ -53,11 +70,18 @@ All projects are written in plain English (US variation) but must be prepared fo
 
 # REST API Guidelines
 
+## Design
+
+- Design the API before implementing it (design-first).
+- Use a top-down approach: start from client use cases to determine what each endpoint must return. This ensures a single request satisfies a client need without over-fetching or under-fetching.
+
 ## URLs
 
 - Version all API URLs. Use an integer prefix as the first path segment (e.g., `/v1/`, `/v2/`). Never publish an unversioned API.
 - URLs represent resources (collections) or documents (individual items) — they are nouns, not verbs.
 - Never put action verbs in URL paths (e.g., no `/create_card`, `/delete_user`). HTTP methods are the verbs.
+- Use plural names for collections and singular names for individual documents (e.g., `/v1/orders/` and `/v1/orders/:id`).
+- No trailing slash on URL paths (`/v1/orders` not `/v1/orders/`).
 - Do not nest resource URLs. Each resource must have its own flat, addressable URL.
   - Bad: `/v1/printers/:printer_id/cartridges/:cartridge_id`
   - Good: `/v1/cartridges/:cartridge_id`
@@ -65,6 +89,7 @@ All projects are written in plain English (US variation) but must be prepared fo
   - Bad: `/v1/printers/:printer_id/cartridges/`
   - Good: `/v1/cartridges/?printer_id=:printer_id`
 - Negotiate content type (JSON, XML, etc.) via `Accept` and `Content-Type` headers, not URL extensions (no `.json`, `.xml` suffixes).
+- Never expose sequential database primary keys in URLs. Use non-sequential IDs (e.g., UUIDs).
 
 ## HTTP Methods
 
@@ -78,6 +103,21 @@ All projects are written in plain English (US variation) but must be prepared fo
 - `PATCH`: Partially update a document. Can modify any number of fields (N ≥ 1) in a single request. The body describes *how* to alter the document, not which single field to change.
 - `DELETE`: Remove a document.
 
+### Idempotency
+
+- Duplicate `POST` requests (same resource created twice) must return `303 See Other` with a `Location` header pointing to the existing resource.
+- Duplicate `PUT` and `PATCH` requests with no effective change must return `304 Not Modified`.
+
+## State Management
+
+- Design reactive APIs: trigger state transitions by setting meaningful fields, not by passing an explicit status value.
+  - Right: `PATCH /v1/orders/1 {"approved_at": "2026-04-01T12:00:00Z"}` → order transitions to `approved`
+  - Wrong: `PATCH /v1/orders/1 {"status": "approved"}`
+- Do not allow clients to force arbitrary state transitions by passing a status value directly.
+- Avoid boolean flag parameters. Model behavior as structured parameters instead.
+  - Bad: `free_shipping=true`
+  - Good: `{"shipping": {"payer": "store", "rate": 0}}`
+
 ## Status Codes
 
 - Use the semantically correct HTTP status code for every response.
@@ -86,6 +126,7 @@ All projects are written in plain English (US variation) but must be prepared fo
 - `4xx` signals a client error: the client must correct the request before retrying.
 - `5xx` signals a server error: the client may retry the same request later.
 - Do not return `4xx` or `5xx` for business rule conflicts (e.g., a duplicate that the system intentionally rejects). Return `200 OK` with a `Content-Location` header pointing to the already-existing resource.
+- Return `404 Not Found` instead of `403 Forbidden` for anonymous (unauthenticated) access. Never confirm that a resource exists to an unauthenticated caller.
 - Be consistent: a given situation must always produce the same status code across all endpoints.
 
 ## Pagination
